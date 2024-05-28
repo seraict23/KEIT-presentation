@@ -1,0 +1,104 @@
+물론입니다! 여러 개의 LabelInput을 동적으로 추가하고, 상태 관리도 효율적으로 처리할 수 있는 방법을 소개하겠습니다. 이를 위해 상태를 객체나 배열로 관리하고, 각 LabelInput 컴포넌트에 고유의 키를 부여하여 상태를 관리하도록 하겠습니다.
+
+1. 상태를 객체로 관리하기
+여러 LabelInput 컴포넌트를 추가하고, 각각의 상태를 객체로 관리하는 방법을 살펴보겠습니다.
+
+tsx
+코드 복사
+// LabelInput.tsx
+import React from 'react';
+
+interface LabelInputProps {
+  label: string;
+  inputType: 'text' | 'select';
+  options?: string[];
+  value: string;
+  onChange: (value: string) => void;
+}
+
+const LabelInput: React.FC<LabelInputProps> = ({ label, inputType, options = [], value, onChange }) => {
+  return (
+    <div>
+      <label>{label}</label>
+      {inputType === 'text' ? (
+        <input 
+          type="text" 
+          value={value} 
+          onChange={(e) => onChange(e.target.value)} 
+        />
+      ) : (
+        <select value={value} onChange={(e) => onChange(e.target.value)}>
+          {options.map((option, index) => (
+            <option key={index} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      )}
+    </div>
+  );
+};
+
+export default LabelInput;
+2. App 컴포넌트에서 상태를 객체로 관리하기
+tsx
+코드 복사
+// App.tsx
+import React, { useState } from 'react';
+import LabelInput from './LabelInput';
+
+interface InputConfig {
+  id: string;
+  label: string;
+  inputType: 'text' | 'select';
+  options?: string[];
+}
+
+const App: React.FC = () => {
+  const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
+
+  const handleInputChange = (id: string, value: string) => {
+    setInputValues((prevValues) => ({
+      ...prevValues,
+      [id]: value,
+    }));
+  };
+
+  const inputConfigs: InputConfig[] = [
+    { id: 'input1', label: 'Text Input 1', inputType: 'text' },
+    { id: 'input2', label: 'Text Input 2', inputType: 'text' },
+    { id: 'select1', label: 'Select Input', inputType: 'select', options: ['Option 1', 'Option 2', 'Option 3'] },
+  ];
+
+  return (
+    <div>
+      {inputConfigs.map((config) => (
+        <LabelInput
+          key={config.id}
+          label={config.label}
+          inputType={config.inputType}
+          options={config.options}
+          value={inputValues[config.id] || ''}
+          onChange={(value) => handleInputChange(config.id, value)}
+        />
+      ))}
+    </div>
+  );
+};
+
+export default App;
+설명
+LabelInput 컴포넌트:
+
+이전과 동일하게 정의합니다.
+App 컴포넌트:
+
+inputValues 상태를 객체로 관리합니다. 키는 각 LabelInput의 고유한 id입니다.
+handleInputChange 함수는 특정 LabelInput의 값을 업데이트합니다.
+inputConfigs 배열은 동적으로 생성할 LabelInput의 설정을 포함합니다. 각 설정은 고유한 id를 가집니다.
+inputConfigs 배열을 map 함수로 순회하여 LabelInput 컴포넌트를 생성하고, 필요한 속성을 전달합니다.
+이 방법을 사용하면 LabelInput 컴포넌트를 동적으로 추가할 수 있으며, 각 컴포넌트의 상태를 객체로 관리하여 코드의 복잡성을 줄일 수 있습니다. inputConfigs 배열에 새로운 입력 설정을 추가하기만 하면, LabelInput 컴포넌트가 자동으로 렌더링되고 상태도 함께 관리됩니다.
+
+// 위의 방법을 쓰게 되면 Warning: A component is changing an uncontrolled input to be controlled. 오류가 발생함
+각 input에 undefined가 들어가서 그럼. || "" 를 붙여주면 해결 된다.
+
